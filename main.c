@@ -1,5 +1,6 @@
 //работает
 //23-oct-2017
+//11-dec-2019 причёсан вид
 
 // сигнал cos (x) + i*sin (x) ; Re + i * Im ; I - real, Q - imaginary
 //
@@ -36,8 +37,8 @@ void print_conj_array (int, float array[]);
 #define	carriers 108		//количество поднесущих, умноженное на три. 1-2-3 бита в каждой, итого 36 * 3 = 108 бит максимум
 #define fftsize 256
 
-int			array_bit [carriers*3];		//здесь будут случайно сгенерированные значения поднесущих - до трёх бит на одну
-float		array_mapped[carriers*2];	//мапим поднесущие в этот массив, получаем комплексные числа, Re+Im части
+int		array_bit [carriers*3];		//здесь будут случайно сгенерированные значения поднесущих - до трёх бит на одну
+float	array_mapped[carriers*2];	//мапим поднесущие в этот массив, получаем комплексные числа, Re+Im части
 //int		array_mapped_conjugate[18]	//сюда пишем комплексно-сопряженные числа
 
 int     i, j, k;
@@ -45,10 +46,10 @@ float	x,y;
 char    z;
 int		current_phase = 0;
 
-int     map_dqpsk[4]={0, 90, 270, 180};							//значения разности фаз при DQPSK
-int     map_d8psk[8]={0, 45 ,135, 90, 315, 270, 180, 225};		//значения разности фаз при D8PSK
+int     map_dqpsk[4] = {0, 90, 270, 180};							//значения разности фаз при DQPSK
+int     map_d8psk[8] = {0, 45 ,135, 90, 315, 270, 180, 225};		//значения разности фаз при D8PSK
 
-enum	{dbpsk=0, dqpsk=1, d8psk=2, nomodtype=255};
+enum	{dbpsk = 0, dqpsk = 1, d8psk = 2, nomodtype = 255};
 int		modulation_type=nomodtype;
 
 FILE	*myfile;
@@ -57,18 +58,13 @@ FILE	*myfile;
 int main(int argc, char *argv[])
 {
 //определяем значения аргументов при вызове
-	//printf("Arguments:%d\n", argc);
-	if (argc==3) {
+	
+	if (argc == 3) {
 	if (!strcmp(argv[1],"dbpsk")) modulation_type=dbpsk;
 	if (!strcmp(argv[1],"dqpsk")) modulation_type=dqpsk;
 	if (!strcmp(argv[1],"d8psk")) modulation_type=d8psk;
 	
-	//printf("file for output:%s\n",argv[2]);
-	
 	myfile = fopen (argv[2], "w");
-	//fprintf(myfile, "test");
-	//fclose(myfile);
-	
 	}
 
 
@@ -82,83 +78,85 @@ if (modulation_type == 255) {
 	printf("dqpsk - mapping with dqpsk\n");
 	printf("dbpsk - mapping with dbpsk\n");
 	exit (1);
-}
+	}
 
 //генерируем массив случайных бит
 generate_array ();
 
-
 printf("output format zXX := Re + i*Im\n");
-
 
 //берём два бита и "мапим" поднесущие DQPSK - это не mapping как таковой в OFDM, это случайная генерация данных
 //печатаем массив и проверяем суммы по 2 бита
 //print_array_DQPSK();
 
-k=carrier_first; //начинаем с поднесущей номер k. 
+k = carrier_first; //начинаем с поднесущей номер k. 
 printf("carriers=%d\n",carriers/3);
 
 //printf("modulation type=%d\n",modulation_type);
 
 
-if (modulation_type == dbpsk) {
-		
-for (i=0; i< carriers/3*2; k++) {
+if (modulation_type == dbpsk)
+	{
+
+for (i = 0; i < carriers/3*2; k++)
+	{
 	if (array_bit[i++] == 1) current_phase = current_phase + 180;
 	
-	if (current_phase >359) current_phase = current_phase - 360;
+	if (current_phase > 359) current_phase = current_phase - 360;
 
 	switch (current_phase) {
-		case   0: x=1; y=0; break;
-		case 180: x=-1; y=0; break;
-		default: x=-5; y=-5;
+		case   0: x = 1;  y = 0; break;
+		case 180: x = -1; y = 0; break;
+		default:  x = -5; y = -5;
 	}
 	i++;
 	array_mapped[i]=x; array_mapped[i+1]=y;
-}
+	}
 printf("\ndbpsk mapping");
 }
 
 
 
-if (modulation_type == dqpsk) {
+if (modulation_type == dqpsk)
+	{
 	
-for (i=0; i< carriers/3*2; k++) {
+for (i = 0; i< carriers/3*2; k++)
+	{
 	j = array_bit[i++]*2 + array_bit[i++];
 	current_phase = current_phase + map_dqpsk[j];
 	if (current_phase >359) current_phase = current_phase - 360;
 
 	switch (current_phase) {
-		case   0: x=1; y=0; break;
-		case  90: x=0; y=1; break;
-		case 180: x=0; y=-1; break;
-		case 270: x=-1; y=0; break;
-		default: x=-5; y=-5;
-	}
+		case   0: x = 1;  y = 0;  break;
+		case  90: x = 0;  y = 1;  break;
+		case 180: x = 0;  y = -1; break;
+		case 270: x = -1; y = 0;  break;
+		default:  x = -5; y = -5;
+		}
 
 	array_mapped[i]=x; array_mapped[i+1]=y;
-}
+	}
 printf("\ndqpsk mapping");
 }
 
 if (modulation_type == d8psk) {
 
-for (i=0; i< carriers/3*2; k++) {
+for (i = 0; i < carriers/3*2; k++)	{
 	j = array_bit[i++]*4 + array_bit[i++]*2 + array_bit[i++];
 	current_phase = current_phase + map_d8psk[j];
-	if (current_phase >359) current_phase = current_phase - 360;
+	if (current_phase > 359) current_phase = current_phase - 360;
 
 	switch (current_phase) {
-		case   0: x=1;		y=0;	  break;
-		case  45: x=0.707;	y=0.707;  break;
-		case  90: x=0;		y=1;	  break;
-		case 135: x=-0.707;	y=0.707;  break;
-		case 180: x=0;		y=-1;	  break;
-		case 225: x=-0.707;	y=-0.707; break;
-		case 270: x=-1;		y=0;	  break;
-		case 315: x=0.707;	y=-0.707; break;
-		default: x=-5; y=-5;
-	}
+		case   0: x = 1;	y = 0;		break;
+		case  45: x =0.707;	y = 0.707;	break;
+		case  90: x =0;		y = 1;		break;
+		case 135: x =-0.707;y = 0.707;	break;
+		case 180: x =0;		y = -1;		break;
+		case 225: x =-0.707;y = -0.707;	break;
+		case 270: x =-1;	y = 0;		break;
+		case 315: x =0.707;	y = -0.707;	break;
+		default:  x =-5;	y = -5;
+		}
 
 	array_mapped[i]=x; array_mapped[i+1]=y;
 }
@@ -175,7 +173,6 @@ print_array (carrier_first, array_mapped);
 print_conj_array (carrier_first, array_mapped);
 
 
-
 printf(" done\n");
 fclose(myfile);
 return 0;
@@ -189,8 +186,8 @@ return 0;
 void generate_array (void)
 {
 srand(time(0));
-for (i=0; i<carriers*3; i++)
-	array_bit[i]=(rand()>16354)?0:1;
+for (i = 0; i < carriers * 3; i++)
+	array_bit[i] = (rand() > 16354)?0:1;
 
 //печатаем их
 //printf("\n108 random generated bits\n");
@@ -202,12 +199,12 @@ void print_array_DQPSK (void)
 {
 	int i;
 //печатаем массив и проверяем суммы по 2 бита
-for (i=0; i<35; i++) {
-//    printf("%d ",i);
-	k = array_bit[i++]*2 + array_bit[i];
+for (i = 0; i < 35; i++) {
+	k = array_bit[i++] * 2 + array_bit[i];
     printf("%d   ", k);
-}
-    printf("\n\n");
+	}
+    
+printf("\n\n");
 return;
 }
 
@@ -216,32 +213,32 @@ void print_array_D8PSK (void)
 {
 	int i;
 //печатаем массив и проверяем суммы по 3 бита
-for (i=0; i<carriers/3; i++) {
-//    printf("%d ",i);
-	k = array_bit[i++]*4 + array_bit[i++]*2 + array_bit[i];
+for (i = 0; i < carriers/3; i++) {
+	k = array_bit[i++] * 4 + array_bit[i++] * 2 + array_bit[i];
     printf("%d     ", k);
-}
-    printf("\n\n");
-    return;
+	}
+
+printf("\n\n");
+return;
 }
 
 //печать массива комплексных чисел
 void print_array (int j, float array[])
 {
 	int counter = 0;
-	for (i=0; i< carriers/3*2; ) {
+	for (i = 0; i < carriers/3*2; ) {
 
-	x=array[i++];
+	x = array[i++];
 	fprintf(myfile, "z %d := %6.3f", counter+j, x);
 	counter++;
 
-	y=array[i++];
-	if (y<0) fprintf(myfile, " -");
+	y = array[i++];
+	if (y < 0) fprintf(myfile, " -");
 	else fprintf(myfile, " +");
 
-	fprintf(myfile," i * %.3f\n", fabs(y)); //i * %d
+	fprintf(myfile," i * %.3f\n", fabs(y));
 
-}
+	}
 }
 
 
@@ -253,14 +250,14 @@ void print_conj_array (int j, float array[])
 
 for (i = 0; i < carriers/3*2; ) {
 
-	x=array[carriers*2/3 - i-2];
+	x = array[carriers*2/3 - i - 2];
 	fprintf(myfile, "z %d := %6.3f", counter, x);
 	counter++;
-	y=array[carriers*2/3 - i-1];
-	if (y<0) fprintf(myfile, " +");
+	y = array[carriers*2/3 - i - 1];
+	if (y < 0) fprintf(myfile, " +");
 	else fprintf(myfile, " -");
 
-	fprintf(myfile, " i * %.3f\n", fabs(y)); //i * %d
-	i=i+2;
-}
+	fprintf(myfile, " i * %.3f\n", fabs(y));
+	i = i + 2;
+	}
 }
